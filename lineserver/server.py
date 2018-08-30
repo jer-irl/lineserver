@@ -24,3 +24,9 @@ class Server(object):
 
     def serve_forever(self):
         self.server.serve_forever()
+
+    def shutdown(self):
+        self.server.shutdown()
+
+    def server_close(self):
+        self.server.server_close()
