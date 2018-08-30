@@ -1,0 +1,2 @@
+Offset = int
+LineNum = int
