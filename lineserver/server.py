@@ -20,7 +20,7 @@ class _Handler(http.server.BaseHTTPRequestHandler):
 class Server(object):
     def __init__(self, port: int, file_name: str):
         self.cache = Cache(file_name, 2 ** 20)
-        self.server = http.server.ThreadingHTTPServer('127.0.0.1:{}'.format(port), _Handler)
+        self.server = http.server.ThreadingHTTPServer(('127.0.0.1', port), _Handler)
 
     def serve_forever(self):
         self.server.serve_forever()
