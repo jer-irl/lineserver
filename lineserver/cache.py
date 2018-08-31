@@ -22,11 +22,11 @@ class Cache(object):
 
         self.storage_bytes = storage_bytes
         self.stored_bytes = 0
-        self.clock_ptr = 0
+        self._clock_ptr = 0
 
-        self.directory = Directory(file_name, 2 ** 10)
+        self._directory = Directory(file_name, 2 ** 10)
 
-        self.records = []  # type: List[_CacheRecord]
+        self._records = []  # type: List[_CacheRecord]
 
     def get_bytes_for_line(self, line_num: LineNum) -> bytes:
         try:
@@ -35,14 +35,14 @@ class Cache(object):
             self._read_in_line(line_num)
             record_idx = -1
 
-        self.records[record_idx].age = 0
-        return self.records[record_idx].bytes
+        self._records[record_idx].age = 0
+        return self._records[record_idx].bytes
 
     def _record_idx_for_line(self, line_num: LineNum) -> int:
-        return [record.line_num for record in self.records].index(line_num)
+        return [record.line_num for record in self._records].index(line_num)
 
     def _read_in_line(self, line_num: LineNum):
-        closest_line, offset = self.directory.find_offset(line_num)
+        closest_line, offset = self._directory.find_offset(line_num)
         with open(self.file_name, 'rb') as file_handle:
             file_handle.seek(offset)
             current_line = closest_line
@@ -56,14 +56,14 @@ class Cache(object):
             self._evict()
 
         self.stored_bytes += len(line)
-        self.records.append(_CacheRecord(line_num, line))
+        self._records.append(_CacheRecord(line_num, line))
 
     def _evict(self) -> None:
         while True:
-            if self.records[self.clock_ptr].visit_and_age() > self.age_threshold:
-                del(self.records[self.clock_ptr])
+            if self._records[self._clock_ptr].visit_and_age() > self.age_threshold:
+                del(self._records[self._clock_ptr])
                 self.stored_bytes -= len(record.bytes)
                 return
 
-            self.clock_ptr += 1
-            self.clock_ptr = self.clock_ptr % len(self.records)
+            self._clock_ptr += 1
+            self._clock_ptr = self._clock_ptr % len(self._records)
