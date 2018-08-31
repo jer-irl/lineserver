@@ -1,5 +1,6 @@
 import unittest
 import math
+import random
 import lineserver.directory
 import lineserver.cache
 
@@ -46,3 +47,38 @@ class DirectoryTestCase(unittest.TestCase):
                          math.ceil(self.num_lines / allowed_records),
                          "Should have correct granularity")
 
+
+class CacheTestCase(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.long_file_name = "../frankenstein.txt"
+        cls.lines = []
+        with open(cls.long_file_name, 'rb') as f:
+            for line in f:
+                cls.lines.append(line)
+
+    def test_stored_less_than_storage(self):
+        allowed_storage = 4096
+        cache = lineserver.cache.Cache(self.long_file_name, allowed_storage)
+
+        for i in range(1, 1000):
+            cache.get_bytes_for_line(i)
+            self.assertLessEqual(cache.stored_bytes, cache.storage_bytes, "Must not exceed allotted cache space")
+
+    def test_accurate_cache_retrieval(self):
+        line_nums = random.sample(range(1000), 10)
+        cache = lineserver.cache.Cache(self.long_file_name, 4096)
+
+        for line_num in line_nums:
+            self.assertEqual(cache.get_bytes_for_line(line_num).strip(), self.lines[line_num - 1].strip(),
+                             "Test accurate cache retrieval")
+
+    def test_reads_from_cached_lines(self):
+        line_num = 1000
+        cache = lineserver.cache.Cache(self.long_file_name, 4096)
+        actual_line = self.lines[line_num - 1]
+
+        for _ in range(1000):
+            line = cache.get_bytes_for_line(line_num)
+            self.assertEqual(line, actual_line, "Should retrieve same thing each time")
+            self.assertEqual(len(cache._records), 1, "Should have 1 record for repeatedly accessed line")

@@ -62,7 +62,7 @@ class Cache(object):
         while True:
             if self._records[self._clock_ptr].visit_and_age() > self.age_threshold:
                 del(self._records[self._clock_ptr])
-                self.stored_bytes -= len(record.bytes)
+                self.stored_bytes -= len(self._records[self._clock_ptr].bytes)
                 return
 
             self._clock_ptr += 1
