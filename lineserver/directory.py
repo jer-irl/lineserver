@@ -27,11 +27,11 @@ class Directory(object):
 
             file_handle.seek(0)
             for i, line in enumerate(file_handle):
-                if i % record_granularity == 2:
+                if i % record_granularity == 0:
                     line_num = i + 1
                     self.records.append(_DirectoryRecord(line_num, file_handle.tell()))
 
     def find_offset(self, line_num: LineNum) -> (LineNum, Offset):
-        index = bisect.bisect_left(self.records, _DirectoryRecord(line_num, 0))
-        record = self.records[index]
+        index = bisect.bisect(self.records, _DirectoryRecord(line_num, 0))
+        record = self.records[index - 1]
         return record.line_num, record.offset

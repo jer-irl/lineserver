@@ -7,26 +7,18 @@ class _Handler(http.server.BaseHTTPRequestHandler):
     responses = {413: ("Request out of range", "Requested line past the end of the file")}
 
     def do_GET(self):
+        print("Received GET request")
         line_number = self.get_line_number()
         line = self.server.cache.get_bytes_for_line(line_number)
-        message = self.MessageClass()
-        message.set_payload(line)
-        self.send_response(200, message)
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(line)
 
     def get_line_number(self):
-        return int(self.requestline.split('/')[-1])
+        return int(self.path.split('/')[-1])
 
 
-class Server(object):
+class Server(http.server.ThreadingHTTPServer):
     def __init__(self, port: int, file_name: str):
+        super().__init__(('127.0.0.1', port), _Handler)
         self.cache = Cache(file_name, 2 ** 20)
-        self.server = http.server.ThreadingHTTPServer(('127.0.0.1', port), _Handler)
-
-    def serve_forever(self):
-        self.server.serve_forever()
-
-    def shutdown(self):
-        self.server.shutdown()
-
-    def server_close(self):
-        self.server.server_close()

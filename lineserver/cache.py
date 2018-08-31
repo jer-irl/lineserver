@@ -1,11 +1,11 @@
-from collections import OrderedDict
-from typing import Dict
+from typing import List
 from . import LineNum
 from .directory import Directory
 
 
 class _CacheRecord(object):
-    def __init__(self, the_bytes: bytes):
+    def __init__(self, line_num: LineNum, the_bytes: bytes):
+        self.line_num = line_num
         self.bytes = the_bytes
         self.age = 0
 
@@ -26,14 +26,22 @@ class Cache(object):
 
         self.directory = Directory(file_name, 2 ** 10)
 
-        self.records = OrderedDict()  # type: Dict[LineNum, _CacheRecord]
+        self.records = []  # type: List[_CacheRecord]
 
     def get_bytes_for_line(self, line_num: LineNum) -> bytes:
-        if line_num not in self.records:
-            self.read_in_line(line_num)
-        return self.records[line_num].bytes
+        try:
+            record_idx = self._record_idx_for_line(line_num)
+        except ValueError:
+            self._read_in_line(line_num)
+            record_idx = -1
 
-    def read_in_line(self, line_num: LineNum):
+        self.records[record_idx].age = 0
+        return self.records[record_idx].bytes
+
+    def _record_idx_for_line(self, line_num: LineNum) -> int:
+        return [record.line_num for record in self.records].index(line_num)
+
+    def _read_in_line(self, line_num: LineNum):
         closest_line, offset = self.directory.find_offset(line_num)
         with open(self.file_name, 'rb') as file_handle:
             file_handle.seek(offset)
@@ -45,15 +53,17 @@ class Cache(object):
             line = file_handle.readline()
 
         while len(line) + self.stored_bytes > self.storage_bytes:
-            self.evict()
+            self._evict()
 
         self.stored_bytes += len(line)
-        self.records[line_num] = _CacheRecord(line)
+        self.records.append(_CacheRecord(line_num, line))
 
-    def evict(self) -> None:
+    def _evict(self) -> None:
         while True:
-            for i, record in self.records:
-                if record.visit_and_age() > self.age_threshold:
-                    del(self.records[i])
-                    self.stored_bytes -= len(record.bytes)
-                    return
+            if self.records[self.clock_ptr].visit_and_age() > self.age_threshold:
+                del(self.records[self.clock_ptr])
+                self.stored_bytes -= len(record.bytes)
+                return
+
+            self.clock_ptr += 1
+            self.clock_ptr = self.clock_ptr % len(self.records)
