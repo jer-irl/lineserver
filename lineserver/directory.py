@@ -1,7 +1,7 @@
 import bisect
 import math
 from typing import List
-from . import LineNum, Offset
+from . import LineNum, Offset, LinePastEndError
 
 
 class _DirectoryRecord(object):
@@ -21,17 +21,21 @@ class Directory(object):
             i = -1
             for i, _ in enumerate(file_handle):
                 pass
-            num_lines = i + 1
+            self.num_lines = i + 1
 
-            record_granularity = math.ceil(num_lines / max_num_records)
+            record_granularity = math.ceil(self.num_lines / max_num_records)
 
             file_handle.seek(0)
+            prev_offset = file_handle.tell()
             for i, line in enumerate(file_handle):
                 if i % record_granularity == 0:
                     line_num = i + 1
-                    self.records.append(_DirectoryRecord(line_num, file_handle.tell()))
+                    self.records.append(_DirectoryRecord(line_num, prev_offset))
+                prev_offset = file_handle.tell()
 
     def find_offset(self, line_num: LineNum) -> (LineNum, Offset):
+        if line_num > self.num_lines:
+            raise LinePastEndError("File only {} lines".format(self.num_lines))
         index = bisect.bisect(self.records, _DirectoryRecord(line_num, 0))
         record = self.records[index - 1]
         return record.line_num, record.offset

@@ -1,4 +1,5 @@
 import http.server
+from . import LinePastEndError
 from .cache import Cache
 
 
@@ -9,10 +10,14 @@ class _Handler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         print("Received GET request")
         line_number = self.get_line_number()
-        line = self.server.cache.get_bytes_for_line(line_number)
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(line)
+        try:
+            line = self.server.cache.get_bytes_for_line(line_number)
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(line)
+        except LinePastEndError as ex:
+            self.send_error(413, "{} is past the end of the file".format(line_number), str(ex))
+
 
     def get_line_number(self):
         return int(self.path.split('/')[-1])
