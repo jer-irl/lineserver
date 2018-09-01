@@ -4,12 +4,11 @@ a deadline for a job interview.  I don't have a huge amount of experience
 building server applications so far, so my architecture might not reflect best
 practices.  I'm eager to learn!
 
-Run ./build.sh to run the two test suites (unit and system).  System tests run
-first, and take a few seconds because multithreaded synchronization was done
-using explicit sleeps.  It may also show warnings, because the server socket
-isn't properly torn down between test runs.  If I had more time, one thing I
-would do is to beef up the testing architecture.  At the end of the tests, 4 and
-8 tests should be successfully run respectively.
+Run ./build.sh to run the two test suites (unit and system).  It may also show
+warnings, because the server socket isn't properly torn down between test runs.
+If I had more time, one thing I would do is to beef up the testing
+architecture.  At the end of the tests, 4 and 8 tests should be successfully
+run respectively.
 
 Run `./run.sh [filename]` to start the server on port 8000.  Then,you can make
 requests of the server using cURL, telnet, or any other tool that supports http
@@ -22,6 +21,9 @@ requests.
   path.  This isn't terrible, but could be generalized.
 - The cache is protected by a coarse lock.  This is discussed below, but a more
   comprehensive caching mechanism could be explored in the future.
+- The cache and directory could be implemented using the `linecache` module.  I
+  didn't know it existed when I started, and I think the manual implementation
+  better shows my skills.
 
 ## How it works
 lineserver.py is a frontend that manages command-line input and initializes the
@@ -54,6 +56,12 @@ GB case).  If the Cache needs to read in from file, it consults the Directory
 for an offset close to the target line, leading to an approximately
 constant-time complexity read in.  (Technically linear if the number of records
 is constrained, but effectively constant.)
+
+__NOTE:__
+After coding this, I realized that there is a `linecache` Python module.  If
+I were to redo this, I would probably use the pre-made module, but for the
+submission I think it better shows my skills if I keep my manually coded cache
+and directory.
 
 ## Build requirements
 I am only using the Python standard library, but have only tested the server on

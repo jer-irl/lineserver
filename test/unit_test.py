@@ -6,6 +6,8 @@ import lineserver.cache
 
 
 class DirectoryTestCase(unittest.TestCase):
+    """Tests the Directory functionality"""
+
     @classmethod
     def setUpClass(cls):
         cls.long_file_name = "test/frankenstein.txt"
@@ -16,20 +18,24 @@ class DirectoryTestCase(unittest.TestCase):
         cls.num_lines = i + 1
 
     def test_only_one_record_allowed(self):
+        """Confirms that when only one record is allowed, only the first line is pointed to."""
         directory = lineserver.directory.Directory(self.long_file_name, 1)
         self.assertEqual(len(directory._records), 1, "Only one record is allowed")
         self.assertEqual(directory._records[0].line_num, 1, "First record should always be for first line")
         self.assertEqual(directory._records[0].offset, 0, "First record should always have offset zero")
 
     def test_no_allowed_records_exception(self):
+        """Confirms that directories with zero records aren't allowed"""
         with self.assertRaises(ZeroDivisionError):
             lineserver.directory.Directory(self.long_file_name, 0)
 
     def test_bad_file_name(self):
+        """Confirms no unexpected behavior if directory passed a bad filename"""
         with self.assertRaises(FileNotFoundError):
             lineserver.directory.Directory(self.long_file_name + "Bogus", 1)
 
     def test_more_records_allowed_than_needed(self):
+        """Tests that we store a record for each line if there are more records allowed than needed"""
         directory = lineserver.directory.Directory(self.long_file_name, self.num_lines + 1000)
         self.assertEqual(directory._records[0].line_num, 1, "First record should always be for first line")
         self.assertEqual(directory._records[0].offset, 0, "First record should always have offset zero")
@@ -37,6 +43,7 @@ class DirectoryTestCase(unittest.TestCase):
         self.assertEqual(len(directory._records), self.num_lines, "Should have a record for every line")
 
     def test_limited_number_of_records(self):
+        """Tests that the directory functions correctly if there is a limit on the number of records allowed"""
         allowed_records = self.num_lines - 1000
         directory = lineserver.directory.Directory(self.long_file_name, allowed_records)
         self.assertEqual(directory._records[0].line_num, 1, "First record should always be for first line")
@@ -49,6 +56,8 @@ class DirectoryTestCase(unittest.TestCase):
 
 
 class CacheTestCase(unittest.TestCase):
+    """Confirms Cache functionality"""
+
     @classmethod
     def setUpClass(cls):
         cls.long_file_name = "test/frankenstein.txt"
@@ -58,14 +67,16 @@ class CacheTestCase(unittest.TestCase):
                 cls.lines.append(line)
 
     def test_stored_less_than_storage(self):
+        """Confirms that we don't surpass our allowed cache storage"""
         allowed_storage = 4096
         cache = lineserver.cache.Cache(self.long_file_name, allowed_storage)
 
-        for i in range(1, 1000):
+        for i in range(1, 5000):
             cache.get_bytes_for_line(i)
             self.assertLessEqual(cache.stored_bytes, cache.storage_bytes, "Must not exceed allotted cache space")
 
     def test_accurate_cache_retrieval(self):
+        """Tests cache retrieval is correctly functioning"""
         line_nums = random.sample(range(1000), 10)
         cache = lineserver.cache.Cache(self.long_file_name, 4096)
 
@@ -74,6 +85,7 @@ class CacheTestCase(unittest.TestCase):
                              "Test accurate cache retrieval")
 
     def test_reads_from_cached_lines(self):
+        """Confirms that the cache reads from memory if possible"""
         line_num = 1000
         cache = lineserver.cache.Cache(self.long_file_name, 4096)
         actual_line = self.lines[line_num - 1]

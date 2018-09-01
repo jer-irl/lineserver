@@ -5,6 +5,13 @@ from . import LineNum, Offset
 
 
 class Directory(object):
+    """Stores offsets into the file by line number
+
+    Makes two passes over the text file on initialization, to determine the granularity it can store, and then to
+    generate the records.  The number of records allowed is passed in as a constructor parameter.  The closest
+    record to a requested line is found by bisection search (not implemented by me).
+    """
+
     def __init__(self, file_name, max_num_records):
         self._records = []  # type: List[_DirectoryRecord]
 
@@ -33,6 +40,10 @@ class Directory(object):
 
 
 class _DirectoryRecord(object):
+    """A record in the directory
+
+    A glorified tuple with ordering by self.line_num
+    """
     def __init__(self, line_num: LineNum, offset: Offset):
         self.line_num = line_num
         self.offset = offset
