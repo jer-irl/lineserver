@@ -7,6 +7,7 @@ class Server(http.server.ThreadingHTTPServer):
     def __init__(self, port: int, file_name: str):
         super().__init__(('127.0.0.1', port), _Handler)
         self.cache = Cache(file_name, 2 ** 20)
+        print("Server initialized on port {}".format(port))
 
 
 class _Handler(http.server.BaseHTTPRequestHandler):

@@ -8,7 +8,7 @@ import lineserver.cache
 class DirectoryTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.long_file_name = "./frankenstein.txt"
+        cls.long_file_name = "test/frankenstein.txt"
         i = -1
         with open(cls.long_file_name, 'rb') as f:
             for i, _ in enumerate(f):
@@ -51,7 +51,7 @@ class DirectoryTestCase(unittest.TestCase):
 class CacheTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.long_file_name = "./frankenstein.txt"
+        cls.long_file_name = "test/frankenstein.txt"
         cls.lines = []
         with open(cls.long_file_name, 'rb') as f:
             for line in f:

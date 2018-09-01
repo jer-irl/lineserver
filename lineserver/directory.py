@@ -4,15 +4,6 @@ from typing import List
 from . import LineNum, Offset
 
 
-class _DirectoryRecord(object):
-    def __init__(self, line_num: LineNum, offset: Offset):
-        self.line_num = line_num
-        self.offset = offset
-
-    def __lt__(self, other):
-        return self.line_num < other.line_num
-
-
 class Directory(object):
     def __init__(self, file_name, max_num_records):
         self._records = []  # type: List[_DirectoryRecord]
@@ -39,3 +30,13 @@ class Directory(object):
         index = bisect.bisect(self._records, _DirectoryRecord(line_num, 0))
         record = self._records[index - 1]
         return record.line_num, record.offset
+
+
+class _DirectoryRecord(object):
+    def __init__(self, line_num: LineNum, offset: Offset):
+        self.line_num = line_num
+        self.offset = offset
+
+    def __lt__(self, other):
+        return self.line_num < other.line_num
+

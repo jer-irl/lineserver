@@ -8,7 +8,7 @@ from lineserver.server import Server
 class SystemTestCase(unittest.TestCase):
     def setUp(self):
         self.port = 8000
-        self.server = Server(self.port, './frankenstein.txt')
+        self.server = Server(self.port, 'test/frankenstein.txt')
         server_thread = threading.Thread(target=self.server.serve_forever)
         server_thread.start()
 

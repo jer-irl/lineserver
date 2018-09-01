@@ -1,4 +1,5 @@
 from typing import List, Dict
+import threading
 from . import LineNum
 from .directory import Directory
 
@@ -17,8 +18,10 @@ class Cache(object):
 
         self._records_directory = {}  # type: Dict[LineNum, int]
         self._records = []  # type: List[_CacheRecord]
+        self._records_lock = threading.Lock()
 
     def get_bytes_for_line(self, line_num: LineNum) -> bytes:
+        self._records_lock.acquire()
         try:
             record_idx = self._record_idx_for_line(line_num)
         except KeyError:
@@ -26,7 +29,10 @@ class Cache(object):
             record_idx = -1
 
         self._records[record_idx].age = 0
-        return self._records[record_idx].bytes
+        res = self._records[record_idx].bytes
+        self._records_lock.release()
+
+        return res
 
     def _record_idx_for_line(self, line_num: LineNum) -> int:
         return self._records_directory[line_num]
