@@ -1,7 +1,7 @@
 import bisect
 import math
 from typing import List
-from . import LineNum, Offset, LinePastEndError
+from . import LineNum, Offset
 
 
 class _DirectoryRecord(object):
@@ -35,7 +35,7 @@ class Directory(object):
 
     def find_offset(self, line_num: LineNum) -> (LineNum, Offset):
         if line_num > self._num_lines:
-            raise LinePastEndError("File only {} lines".format(self._num_lines))
+            raise IndexError("File only {} lines".format(self._num_lines))
         index = bisect.bisect(self._records, _DirectoryRecord(line_num, 0))
         record = self._records[index - 1]
         return record.line_num, record.offset
